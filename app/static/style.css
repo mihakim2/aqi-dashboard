@@ -17,6 +17,7 @@
     --unhealthy: #ff0000;
     --very-unhealthy: #8f3f97;
     --hazardous: #7e0023;
+    --iqr-band: rgba(29, 161, 242, 0.2);
 }
 
 body {
@@ -156,6 +157,33 @@ body {
     color: var(--text-secondary);
     font-size: 1.1rem;
     max-width: 500px;
+    margin-bottom: 15px;
+}
+
+.cigarettes-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card);
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+    display: inline-flex;
+}
+
+.cigarette-icon {
+    font-size: 1.5rem;
+}
+
+.cigarette-value {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.cigarette-value span {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 /* Readings Grid */
@@ -224,11 +252,25 @@ body {
 
 .scale-segment {
     flex: 1;
-    padding: 10px 5px;
+    padding: 12px 5px;
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
     color: #000;
+}
+
+.scale-range {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.scale-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 3px 0;
+}
+
+.scale-cig {
+    font-size: 0.65rem;
+    opacity: 0.8;
 }
 
 .scale-segment.good { background: var(--good); }
@@ -246,10 +288,18 @@ body {
     margin-bottom: 30px;
 }
 
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
 .chart-tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
 }
 
 .chart-tab {
@@ -273,6 +323,33 @@ body {
     color: #fff;
 }
 
+.chart-legend {
+    display: flex;
+    gap: 20px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-line {
+    width: 20px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+.legend-band {
+    width: 20px;
+    height: 12px;
+    background: var(--iqr-band);
+    border-radius: 3px;
+}
+
 .chart-container {
     height: 300px;
     margin-bottom: 20px;
@@ -281,23 +358,24 @@ body {
 .chart-stats {
     display: flex;
     justify-content: center;
-    gap: 40px;
+    gap: 30px;
     flex-wrap: wrap;
 }
 
 .stat {
     text-align: center;
+    min-width: 80px;
 }
 
 .stat-label {
     display: block;
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin-bottom: 5px;
 }
 
 .stat-value {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 700;
 }
 
@@ -377,6 +455,12 @@ body {
     font-size: 0.8rem;
 }
 
+.disclaimer {
+    margin-top: 10px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .dashboard {
@@ -419,12 +503,19 @@ body {
     }
     
     .scale-segment {
-        font-size: 0.6rem;
         padding: 8px 2px;
     }
     
+    .scale-range { font-size: 0.7rem; }
+    .scale-name { font-size: 0.6rem; }
+    .scale-cig { font-size: 0.55rem; }
+    
     .chart-stats {
-        gap: 20px;
+        gap: 15px;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
     }
 }
 
@@ -445,3 +536,8 @@ body {
 .aqi-unhealthy { background-color: var(--unhealthy); color: #fff; }
 .aqi-very-unhealthy { background-color: var(--very-unhealthy); color: #fff; }
 .aqi-hazardous { background-color: var(--hazardous); color: #fff; }
+
+/* Interpolated point indicator */
+.interpolated-marker {
+    border: 2px dashed rgba(255, 165, 0, 0.8);
+}

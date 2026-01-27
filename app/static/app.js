@@ -1,4 +1,4 @@
-// AQI Dashboard Frontend
+// AQI Dashboard Frontend with IQR bands and outlier handling
 
 class AQIDashboard {
     constructor() {
@@ -81,6 +81,9 @@ class AQIDashboard {
         document.getElementById('aqiCategory').style.backgroundColor = aqi.color;
         document.getElementById('aqiCategory').style.color = this.getTextColor(aqi.color);
         document.getElementById('aqiMessage').textContent = aqi.message;
+        
+        // Update cigarettes equivalent
+        document.getElementById('cigarettes').textContent = aqi.cigarettes_per_day.toFixed(1);
 
         // Update readings
         const readings = data.readings;
@@ -96,50 +99,117 @@ class AQIDashboard {
         try {
             const response = await fetch(`/api/history/${period}`);
             const data = await response.json();
-            this.updateChart(data);
+            this.updateChart(data, period);
             this.updateStats(data);
         } catch (error) {
             console.error('Error loading history:', error);
         }
     }
 
-    updateChart(data) {
+    updateChart(data, period) {
         const ctx = document.getElementById('trendChart').getContext('2d');
         
-        // Prepare data for chart
+        // Prepare main data for chart
         const chartData = data.data.map(d => ({
             x: new Date(d.timestamp * 1000),
             y: d.aqi,
             pm25: d.pm25,
-            color: d.color
+            color: d.color,
+            interpolated: d.interpolated
         }));
+
+        // Prepare IQR band data for 7d and 30d
+        const showIQR = (period === '7d' || period === '30d') && data.iqr_bands && data.iqr_bands.length > 0;
+        
+        let iqrUpperData = [];
+        let iqrLowerData = [];
+        
+        if (showIQR) {
+            iqrUpperData = data.iqr_bands.map(d => ({
+                x: new Date(d.timestamp * 1000),
+                y: d.q3
+            }));
+            iqrLowerData = data.iqr_bands.map(d => ({
+                x: new Date(d.timestamp * 1000),
+                y: d.q1
+            }));
+        }
+
+        // Show/hide IQR legend
+        const iqrLegend = document.querySelector('.iqr-legend');
+        if (iqrLegend) {
+            iqrLegend.style.display = showIQR ? 'flex' : 'none';
+        }
 
         // Destroy existing chart
         if (this.chart) {
             this.chart.destroy();
         }
 
-        // Create gradient
+        // Create gradient for main line
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(29, 161, 242, 0.5)');
+        gradient.addColorStop(0, 'rgba(29, 161, 242, 0.4)');
         gradient.addColorStop(1, 'rgba(29, 161, 242, 0.0)');
+
+        // Build datasets
+        const datasets = [];
+        
+        // IQR upper band (if applicable)
+        if (showIQR && iqrUpperData.length > 0) {
+            datasets.push({
+                label: 'Q3 (75th percentile)',
+                data: iqrUpperData,
+                borderColor: 'rgba(29, 161, 242, 0.3)',
+                backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                fill: '+1',
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 1,
+                borderDash: [5, 5]
+            });
+            
+            datasets.push({
+                label: 'Q1 (25th percentile)',
+                data: iqrLowerData,
+                borderColor: 'rgba(29, 161, 242, 0.3)',
+                backgroundColor: 'transparent',
+                fill: false,
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 1,
+                borderDash: [5, 5]
+            });
+        }
+        
+        // Main AQI line
+        datasets.push({
+            label: 'AQI',
+            data: chartData,
+            borderColor: '#1da1f2',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.4,
+            pointRadius: (ctx) => {
+                const point = chartData[ctx.dataIndex];
+                return point && point.interpolated ? 4 : 0;
+            },
+            pointBackgroundColor: (ctx) => {
+                const point = chartData[ctx.dataIndex];
+                return point && point.interpolated ? '#ffa726' : '#1da1f2';
+            },
+            pointBorderColor: (ctx) => {
+                const point = chartData[ctx.dataIndex];
+                return point && point.interpolated ? '#ff9800' : '#1da1f2';
+            },
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#1da1f2',
+            borderWidth: 2,
+            order: 0
+        });
 
         this.chart = new Chart(ctx, {
             type: 'line',
-            data: {
-                datasets: [{
-                    label: 'AQI',
-                    data: chartData,
-                    borderColor: '#1da1f2',
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#1da1f2',
-                    borderWidth: 2
-                }]
-            },
+            data: { datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -159,16 +229,20 @@ class AQIDashboard {
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
+                        filter: function(tooltipItem) {
+                            return tooltipItem.dataset.label === 'AQI';
+                        },
                         callbacks: {
                             title: function(context) {
                                 return new Date(context[0].parsed.x).toLocaleString();
                             },
                             label: function(context) {
                                 const point = context.raw;
-                                return [
-                                    `AQI: ${point.y}`,
+                                const labels = [
+                                    `AQI: ${point.y}${point.interpolated ? ' (interpolated)' : ''}`,
                                     `PM2.5: ${point.pm25} µg/m³`
                                 ];
+                                return labels;
                             }
                         }
                     }
@@ -177,7 +251,7 @@ class AQIDashboard {
                     x: {
                         type: 'time',
                         time: {
-                            unit: this.currentPeriod === '24h' ? 'hour' : 'day',
+                            unit: period === '24h' ? 'hour' : 'day',
                             displayFormats: {
                                 hour: 'HH:mm',
                                 day: 'MMM d'
@@ -192,6 +266,7 @@ class AQIDashboard {
                     },
                     y: {
                         beginAtZero: true,
+                        suggestedMax: 200,
                         grid: {
                             color: 'rgba(255,255,255,0.05)'
                         },
@@ -215,6 +290,19 @@ class AQIDashboard {
             document.getElementById('avgAqi').textContent = avg;
             document.getElementById('maxAqi').textContent = max;
             document.getElementById('minAqi').textContent = min;
+            
+            // IQR range
+            if (data.statistics) {
+                const stats = data.statistics;
+                document.getElementById('iqrRange').textContent = `${stats.q1}-${stats.q3}`;
+            } else {
+                document.getElementById('iqrRange').textContent = '--';
+            }
+            
+            // Cigarettes average
+            if (data.cigarettes_per_day_avg !== undefined) {
+                document.getElementById('avgCigarettes').textContent = data.cigarettes_per_day_avg.toFixed(1);
+            }
         }
     }
 
@@ -234,7 +322,7 @@ class AQIDashboard {
         const container = document.getElementById('nearbySensors');
         
         if (!data.sensors || data.sensors.length === 0) {
-            container.innerHTML = '<div class="nearby-loading">No nearby sensors found</div>';
+            container.innerHTML = '<div class="nearby-loading">No nearby sensors with valid data</div>';
             return;
         }
 

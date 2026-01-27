@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 </head>
 <body>
     <div class="dashboard">
@@ -34,6 +35,10 @@
             <div class="aqi-details">
                 <div class="aqi-category" id="aqiCategory">Loading...</div>
                 <p class="aqi-message" id="aqiMessage">Fetching air quality data...</p>
+                <div class="cigarettes-info">
+                    <span class="cigarette-icon">🚬</span>
+                    <span class="cigarette-value"><span id="cigarettes">--</span> cigarettes/day equivalent</span>
+                </div>
             </div>
         </section>
 
@@ -75,21 +80,51 @@
         <section class="aqi-scale">
             <h3>AQI Scale</h3>
             <div class="scale-bar">
-                <div class="scale-segment good">0-50<br>Good</div>
-                <div class="scale-segment moderate">51-100<br>Moderate</div>
-                <div class="scale-segment usg">101-150<br>USG</div>
-                <div class="scale-segment unhealthy">151-200<br>Unhealthy</div>
-                <div class="scale-segment very-unhealthy">201-300<br>Very Unhealthy</div>
-                <div class="scale-segment hazardous">301+<br>Hazardous</div>
+                <div class="scale-segment good">
+                    <div class="scale-range">0-50</div>
+                    <div class="scale-name">Good</div>
+                    <div class="scale-cig">0-0.5 🚬</div>
+                </div>
+                <div class="scale-segment moderate">
+                    <div class="scale-range">51-100</div>
+                    <div class="scale-name">Moderate</div>
+                    <div class="scale-cig">0.5-1.6 🚬</div>
+                </div>
+                <div class="scale-segment usg">
+                    <div class="scale-range">101-150</div>
+                    <div class="scale-name">USG</div>
+                    <div class="scale-cig">1.6-2.5 🚬</div>
+                </div>
+                <div class="scale-segment unhealthy">
+                    <div class="scale-range">151-200</div>
+                    <div class="scale-name">Unhealthy</div>
+                    <div class="scale-cig">2.5-6.8 🚬</div>
+                </div>
+                <div class="scale-segment very-unhealthy">
+                    <div class="scale-range">201-300</div>
+                    <div class="scale-name">Very Unhealthy</div>
+                    <div class="scale-cig">6.8-11.4 🚬</div>
+                </div>
+                <div class="scale-segment hazardous">
+                    <div class="scale-range">301+</div>
+                    <div class="scale-name">Hazardous</div>
+                    <div class="scale-cig">11.4+ 🚬</div>
+                </div>
             </div>
         </section>
 
         <!-- Trend Charts -->
         <section class="charts-section">
-            <div class="chart-tabs">
-                <button class="chart-tab active" data-period="24h">24 Hours</button>
-                <button class="chart-tab" data-period="7d">7 Days</button>
-                <button class="chart-tab" data-period="30d">30 Days</button>
+            <div class="chart-header">
+                <div class="chart-tabs">
+                    <button class="chart-tab active" data-period="24h">24 Hours</button>
+                    <button class="chart-tab" data-period="7d">7 Days</button>
+                    <button class="chart-tab" data-period="30d">30 Days</button>
+                </div>
+                <div class="chart-legend" id="chartLegend">
+                    <span class="legend-item"><span class="legend-line"></span> AQI</span>
+                    <span class="legend-item iqr-legend" style="display:none;"><span class="legend-band"></span> IQR Range</span>
+                </div>
             </div>
             <div class="chart-container">
                 <canvas id="trendChart"></canvas>
@@ -106,6 +141,14 @@
                 <div class="stat">
                     <span class="stat-label">Min AQI</span>
                     <span class="stat-value" id="minAqi">--</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">IQR (Q1-Q3)</span>
+                    <span class="stat-value" id="iqrRange">--</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">🚬 Avg/Day</span>
+                    <span class="stat-value" id="avgCigarettes">--</span>
                 </div>
             </div>
         </section>
@@ -126,6 +169,7 @@
                 Firmware: <span id="firmware">--</span> |
                 ID: <span id="sensorId">--</span>
             </p>
+            <p class="disclaimer">🚬 Cigarette equivalence based on Berkeley Earth research (22 µg/m³ PM2.5 ≈ 1 cigarette/day)</p>
         </footer>
     </div>
 

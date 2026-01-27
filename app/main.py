@@ -9,7 +9,10 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 from .purpleair import PurpleAirClient
-from .aqi import calculate_aqi, apply_epa_correction
+from .aqi import (
+    calculate_aqi, apply_epa_correction, aqi_to_cigarettes,
+    interpolate_outliers, calculate_iqr_bands, filter_valid_sensor_data
+)
 
 load_dotenv()
 
@@ -56,6 +59,9 @@ async def get_current_data() -> Dict[str, Any]:
         # Calculate AQI
         aqi, category, color, message = calculate_aqi(pm25_corrected)
         
+        # Calculate cigarettes equivalent
+        cigarettes = aqi_to_cigarettes(aqi)
+        
         return {
             "sensor_id": SENSOR_ID,
             "name": sensor.get("name", "Unknown"),
@@ -82,7 +88,8 @@ async def get_current_data() -> Dict[str, Any]:
                 "value": aqi,
                 "category": category,
                 "color": color,
-                "message": message
+                "message": message,
+                "cigarettes_per_day": round(cigarettes, 2)
             },
             "confidence": sensor.get("confidence", 100),
             "channel_state": sensor.get("channel_state"),
@@ -129,18 +136,55 @@ async def get_history(period: str) -> Dict[str, Any]:
                 "temperature": entry.get("temperature"),
                 "aqi": aqi,
                 "category": category,
-                "color": color
+                "color": color,
+                "interpolated": False
             })
         
         # Sort by timestamp
         processed.sort(key=lambda x: x["timestamp"])
+        
+        # Apply outlier detection and interpolation
+        processed = interpolate_outliers(processed, 'aqi')
+        
+        # Calculate IQR bands (especially useful for 7d and 30d)
+        aqi_values = [d['aqi'] for d in processed if not d.get('interpolated', False)]
+        iqr_stats = calculate_iqr_bands(aqi_values)
+        
+        # Calculate rolling IQR for chart bands (group by time windows)
+        iqr_bands = []
+        if period in ['7d', '30d'] and len(processed) > 10:
+            window_size = 6 if period == '7d' else 12  # 6 hours for 7d, 12 hours for 30d
+            for i in range(0, len(processed), window_size):
+                window = processed[i:i + window_size]
+                if window:
+                    window_values = [d['aqi'] for d in window if d['aqi'] > 0]
+                    if len(window_values) >= 3:
+                        sorted_vals = sorted(window_values)
+                        n = len(sorted_vals)
+                        q1 = sorted_vals[n // 4] if n >= 4 else sorted_vals[0]
+                        q3 = sorted_vals[(3 * n) // 4] if n >= 4 else sorted_vals[-1]
+                        median = sorted_vals[n // 2]
+                        
+                        iqr_bands.append({
+                            "timestamp": window[len(window)//2]['timestamp'],
+                            "q1": q1,
+                            "median": median,
+                            "q3": q3
+                        })
+        
+        # Calculate cigarettes stats
+        avg_aqi = sum(aqi_values) / len(aqi_values) if aqi_values else 0
+        cigarettes_avg = aqi_to_cigarettes(int(avg_aqi))
         
         return {
             "sensor_id": SENSOR_ID,
             "period": period,
             "average_minutes": data.get("average"),
             "data_points": len(processed),
-            "data": processed
+            "data": processed,
+            "statistics": iqr_stats,
+            "iqr_bands": iqr_bands,
+            "cigarettes_per_day_avg": round(cigarettes_avg, 2)
         }
     except HTTPException:
         raise
@@ -193,6 +237,9 @@ async def get_nearby_sensors() -> Dict[str, Any]:
                 "temperature": s.get("temperature")
             })
         
+        # Filter out invalid/outlier sensors
+        nearby_sensors = filter_valid_sensor_data(nearby_sensors)
+        
         # Sort by AQI
         nearby_sensors.sort(key=lambda x: x["aqi"])
         
@@ -214,4 +261,4 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
