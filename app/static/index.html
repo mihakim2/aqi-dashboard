@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Dashboard - West Roseville</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🌬️ Air Quality Dashboard</h1>
+                <div class="sensor-info">
+                    <span id="sensorName">Loading...</span>
+                    <span class="location">📍 West Roseville, CA</span>
+                </div>
+            </div>
+            <div class="last-update">
+                Last updated: <span id="lastUpdate">--</span>
+                <button id="refreshBtn" class="refresh-btn" title="Refresh">🔄</button>
+            </div>
+        </header>
+
+        <!-- Main AQI Display -->
+        <section class="aqi-hero">
+            <div class="aqi-gauge" id="aqiGauge">
+                <div class="aqi-value" id="aqiValue">--</div>
+                <div class="aqi-label">AQI</div>
+            </div>
+            <div class="aqi-details">
+                <div class="aqi-category" id="aqiCategory">Loading...</div>
+                <p class="aqi-message" id="aqiMessage">Fetching air quality data...</p>
+            </div>
+        </section>
+
+        <!-- Current Readings -->
+        <section class="readings-grid">
+            <div class="reading-card">
+                <div class="reading-icon">💨</div>
+                <div class="reading-value"><span id="pm25">--</span> <small>µg/m³</small></div>
+                <div class="reading-label">PM2.5</div>
+            </div>
+            <div class="reading-card">
+                <div class="reading-icon">🌫️</div>
+                <div class="reading-value"><span id="pm10">--</span> <small>µg/m³</small></div>
+                <div class="reading-label">PM10</div>
+            </div>
+            <div class="reading-card">
+                <div class="reading-icon">🌡️</div>
+                <div class="reading-value"><span id="temperature">--</span><small>°F</small></div>
+                <div class="reading-label">Temperature</div>
+            </div>
+            <div class="reading-card">
+                <div class="reading-icon">💧</div>
+                <div class="reading-value"><span id="humidity">--</span><small>%</small></div>
+                <div class="reading-label">Humidity</div>
+            </div>
+            <div class="reading-card">
+                <div class="reading-icon">📊</div>
+                <div class="reading-value"><span id="pressure">--</span> <small>hPa</small></div>
+                <div class="reading-label">Pressure</div>
+            </div>
+            <div class="reading-card">
+                <div class="reading-icon">✅</div>
+                <div class="reading-value"><span id="confidence">--</span><small>%</small></div>
+                <div class="reading-label">Confidence</div>
+            </div>
+        </section>
+
+        <!-- AQI Scale Reference -->
+        <section class="aqi-scale">
+            <h3>AQI Scale</h3>
+            <div class="scale-bar">
+                <div class="scale-segment good">0-50<br>Good</div>
+                <div class="scale-segment moderate">51-100<br>Moderate</div>
+                <div class="scale-segment usg">101-150<br>USG</div>
+                <div class="scale-segment unhealthy">151-200<br>Unhealthy</div>
+                <div class="scale-segment very-unhealthy">201-300<br>Very Unhealthy</div>
+                <div class="scale-segment hazardous">301+<br>Hazardous</div>
+            </div>
+        </section>
+
+        <!-- Trend Charts -->
+        <section class="charts-section">
+            <div class="chart-tabs">
+                <button class="chart-tab active" data-period="24h">24 Hours</button>
+                <button class="chart-tab" data-period="7d">7 Days</button>
+                <button class="chart-tab" data-period="30d">30 Days</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-stats" id="chartStats">
+                <div class="stat">
+                    <span class="stat-label">Average AQI</span>
+                    <span class="stat-value" id="avgAqi">--</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Max AQI</span>
+                    <span class="stat-value" id="maxAqi">--</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Min AQI</span>
+                    <span class="stat-value" id="minAqi">--</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nearby Sensors -->
+        <section class="nearby-section">
+            <h3>📍 Nearby Sensors</h3>
+            <div class="nearby-grid" id="nearbySensors">
+                <div class="nearby-loading">Loading nearby sensors...</div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Data from <a href="https://www.purpleair.com" target="_blank">PurpleAir</a> sensor network</p>
+            <p class="sensor-details">
+                Sensor: <span id="sensorModel">--</span> | 
+                Firmware: <span id="firmware">--</span> |
+                ID: <span id="sensorId">--</span>
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
