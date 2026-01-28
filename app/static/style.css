@@ -18,6 +18,7 @@
     --very-unhealthy: #8f3f97;
     --hazardous: #7e0023;
     --iqr-band: rgba(29, 161, 242, 0.2);
+    --joke-bg: linear-gradient(135deg, #2a3a4e 0%, #1a2a3e 100%);
 }
 
 body {
@@ -82,6 +83,7 @@ body {
 
 .refresh-btn:hover {
     background: var(--accent);
+    transform: scale(1.05);
 }
 
 /* AQI Hero Section */
@@ -161,14 +163,13 @@ body {
 }
 
 .cigarettes-info {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
     background: var(--bg-card);
     padding: 12px 18px;
     border-radius: 10px;
     margin-top: 15px;
-    display: inline-flex;
 }
 
 .cigarette-icon {
@@ -189,7 +190,7 @@ body {
 /* Readings Grid */
 .readings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 15px;
     margin-bottom: 30px;
 }
@@ -224,8 +225,17 @@ body {
 }
 
 .reading-label {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.reading-desc {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    opacity: 0.8;
 }
 
 /* AQI Scale */
@@ -240,8 +250,6 @@ body {
     margin-bottom: 15px;
     color: var(--text-secondary);
     font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 .scale-bar {
@@ -258,7 +266,7 @@ body {
 }
 
 .scale-range {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
 }
 
@@ -269,7 +277,7 @@ body {
 }
 
 .scale-cig {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     opacity: 0.8;
 }
 
@@ -364,18 +372,18 @@ body {
 
 .stat {
     text-align: center;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .stat-label {
     display: block;
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin-bottom: 5px;
 }
 
 .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
 }
 
@@ -389,11 +397,12 @@ body {
 
 .nearby-section h3 {
     margin-bottom: 20px;
+    font-size: 1.1rem;
 }
 
 .nearby-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
 }
 
@@ -403,28 +412,28 @@ body {
     padding: 15px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .nearby-aqi {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .nearby-info h4 {
-    font-size: 0.95rem;
-    margin-bottom: 3px;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
 }
 
 .nearby-info p {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 .nearby-loading {
@@ -433,12 +442,74 @@ body {
     padding: 30px;
 }
 
+/* Dad Jokes Section */
+.jokes-section {
+    background: var(--joke-bg);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.joke-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.joke-emoji {
+    font-size: 2rem;
+}
+
+.joke-header h3 {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.joke-content {
+    background: rgba(0,0,0,0.2);
+    border-radius: 15px;
+    padding: 25px 30px;
+    margin-bottom: 20px;
+}
+
+.dad-joke {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    font-style: italic;
+}
+
+.new-joke-btn {
+    background: var(--accent);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.new-joke-btn:hover {
+    background: #0d8ae0;
+    transform: scale(1.05);
+}
+
+.new-joke-btn:active {
+    transform: scale(0.98);
+}
+
 /* Footer */
 .footer {
     text-align: center;
-    padding: 30px;
+    padding: 20px;
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .footer a {
@@ -450,14 +521,9 @@ body {
     text-decoration: underline;
 }
 
-.sensor-details {
-    margin-top: 10px;
-    font-size: 0.8rem;
-}
-
 .disclaimer {
-    margin-top: 10px;
-    font-size: 0.75rem;
+    margin-top: 8px;
+    font-size: 0.7rem;
     opacity: 0.7;
 }
 
@@ -481,45 +547,57 @@ body {
     }
     
     .aqi-gauge {
-        width: 160px;
-        height: 160px;
+        width: 150px;
+        height: 150px;
     }
     
     .aqi-gauge::before {
-        width: 130px;
-        height: 130px;
+        width: 120px;
+        height: 120px;
     }
     
     .aqi-value {
-        font-size: 3rem;
+        font-size: 2.8rem;
     }
     
     .aqi-category {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
     
     .readings-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .reading-desc {
+        display: none;
+    }
+    
     .scale-segment {
         padding: 8px 2px;
     }
     
-    .scale-range { font-size: 0.7rem; }
-    .scale-name { font-size: 0.6rem; }
-    .scale-cig { font-size: 0.55rem; }
+    .scale-range { font-size: 0.65rem; }
+    .scale-name { font-size: 0.55rem; }
+    .scale-cig { display: none; }
     
     .chart-stats {
         gap: 15px;
     }
     
     .stat-value {
-        font-size: 1.1rem;
+        font-size: 1rem;
+    }
+    
+    .dad-joke {
+        font-size: 1rem;
+    }
+    
+    .jokes-section {
+        padding: 20px;
     }
 }
 
-/* Loading Animation */
+/* Animations */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -529,6 +607,15 @@ body {
     animation: pulse 1.5s infinite;
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
 /* AQI Color Classes */
 .aqi-good { background-color: var(--good); color: #000; }
 .aqi-moderate { background-color: var(--moderate); color: #000; }
@@ -536,8 +623,3 @@ body {
 .aqi-unhealthy { background-color: var(--unhealthy); color: #fff; }
 .aqi-very-unhealthy { background-color: var(--very-unhealthy); color: #fff; }
 .aqi-hazardous { background-color: var(--hazardous); color: #fff; }
-
-/* Interpolated point indicator */
-.interpolated-marker {
-    border: 2px dashed rgba(255, 165, 0, 0.8);
-}

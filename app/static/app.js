@@ -1,4 +1,4 @@
-// AQI Dashboard Frontend with IQR bands and outlier handling
+// How's the Air? Dashboard - Frontend with IQR bands, outlier handling, and dad jokes
 
 class AQIDashboard {
     constructor() {
@@ -11,6 +11,7 @@ class AQIDashboard {
         await this.loadCurrentData();
         await this.loadHistory(this.currentPeriod);
         await this.loadNearbySensors();
+        await this.loadJoke();
         
         this.setupEventListeners();
         this.startAutoRefresh();
@@ -31,6 +32,11 @@ class AQIDashboard {
                 this.loadHistory(this.currentPeriod);
             });
         });
+
+        // New joke button
+        document.getElementById('newJokeBtn').addEventListener('click', () => {
+            this.loadJoke();
+        });
     }
 
     startAutoRefresh() {
@@ -48,7 +54,8 @@ class AQIDashboard {
         await Promise.all([
             this.loadCurrentData(),
             this.loadHistory(this.currentPeriod),
-            this.loadNearbySensors()
+            this.loadNearbySensors(),
+            this.loadJoke()
         ]);
         
         setTimeout(() => {
@@ -70,9 +77,8 @@ class AQIDashboard {
         // Update sensor info
         document.getElementById('sensorName').textContent = data.name;
         document.getElementById('sensorModel').textContent = data.model || 'Unknown';
-        document.getElementById('firmware').textContent = data.firmware || 'Unknown';
         document.getElementById('sensorId').textContent = data.sensor_id;
-        document.getElementById('lastUpdate').textContent = data.last_seen_formatted;
+        document.getElementById('lastUpdate').textContent = this.formatTime(data.last_seen_formatted);
 
         // Update AQI display
         const aqi = data.aqi;
@@ -93,6 +99,19 @@ class AQIDashboard {
         document.getElementById('humidity').textContent = readings.humidity;
         document.getElementById('pressure').textContent = readings.pressure;
         document.getElementById('confidence').textContent = data.confidence;
+    }
+
+    formatTime(timeStr) {
+        // Make time more friendly
+        const date = new Date(timeStr.replace(' ', 'T'));
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     async loadHistory(period) {
@@ -154,10 +173,10 @@ class AQIDashboard {
         // Build datasets
         const datasets = [];
         
-        // IQR upper band (if applicable)
+        // IQR bands (if applicable)
         if (showIQR && iqrUpperData.length > 0) {
             datasets.push({
-                label: 'Q3 (75th percentile)',
+                label: 'Q3',
                 data: iqrUpperData,
                 borderColor: 'rgba(29, 161, 242, 0.3)',
                 backgroundColor: 'rgba(29, 161, 242, 0.1)',
@@ -169,7 +188,7 @@ class AQIDashboard {
             });
             
             datasets.push({
-                label: 'Q1 (25th percentile)',
+                label: 'Q1',
                 data: iqrLowerData,
                 borderColor: 'rgba(29, 161, 242, 0.3)',
                 backgroundColor: 'transparent',
@@ -239,7 +258,7 @@ class AQIDashboard {
                             label: function(context) {
                                 const point = context.raw;
                                 const labels = [
-                                    `AQI: ${point.y}${point.interpolated ? ' (interpolated)' : ''}`,
+                                    `AQI: ${point.y}${point.interpolated ? ' (estimated)' : ''}`,
                                     `PM2.5: ${point.pm25} µg/m³`
                                 ];
                                 return labels;
@@ -261,12 +280,13 @@ class AQIDashboard {
                             color: 'rgba(255,255,255,0.05)'
                         },
                         ticks: {
-                            color: '#8899a6'
+                            color: '#8899a6',
+                            maxTicksLimit: period === '24h' ? 12 : 7
                         }
                     },
                     y: {
                         beginAtZero: true,
-                        suggestedMax: 200,
+                        suggestedMax: 150,
                         grid: {
                             color: 'rgba(255,255,255,0.05)'
                         },
@@ -314,7 +334,7 @@ class AQIDashboard {
         } catch (error) {
             console.error('Error loading nearby sensors:', error);
             document.getElementById('nearbySensors').innerHTML = 
-                '<div class="nearby-loading">Unable to load nearby sensors</div>';
+                '<div class="nearby-loading">Couldn\'t find nearby sensors</div>';
         }
     }
 
@@ -322,7 +342,7 @@ class AQIDashboard {
         const container = document.getElementById('nearbySensors');
         
         if (!data.sensors || data.sensors.length === 0) {
-            container.innerHTML = '<div class="nearby-loading">No nearby sensors with valid data</div>';
+            container.innerHTML = '<div class="nearby-loading">No valid nearby sensors right now</div>';
             return;
         }
 
@@ -332,15 +352,32 @@ class AQIDashboard {
                     ${sensor.aqi}
                 </div>
                 <div class="nearby-info">
-                    <h4>${this.truncate(sensor.name, 20)}</h4>
+                    <h4>${this.truncate(sensor.name, 18)}</h4>
                     <p>${sensor.category}</p>
                 </div>
             </div>
         `).join('');
     }
 
+    async loadJoke() {
+        const jokeEl = document.getElementById('dadJoke');
+        jokeEl.classList.remove('fade-in');
+        
+        try {
+            const response = await fetch('/api/joke');
+            const data = await response.json();
+            
+            // Small delay for animation effect
+            setTimeout(() => {
+                jokeEl.textContent = `"${data.joke}"`;
+                jokeEl.classList.add('fade-in');
+            }, 100);
+        } catch (error) {
+            jokeEl.textContent = '"Why did the air quality sensor go to therapy? It had too many issues with its readings!"';
+        }
+    }
+
     getTextColor(bgColor) {
-        // Return white or black text based on background brightness
         const darkBgs = ['#ff0000', '#8f3f97', '#7e0023'];
         return darkBgs.includes(bgColor.toLowerCase()) ? '#fff' : '#000';
     }

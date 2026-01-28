@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Quality Dashboard - West Roseville</title>
+    <title>How's the Air? - West Roseville</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 </head>
 <body>
     <div class="dashboard">
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>🌬️ Air Quality Dashboard</h1>
+                <h1>🌬️ How's the Air?</h1>
                 <div class="sensor-info">
                     <span id="sensorName">Loading...</span>
                     <span class="location">📍 West Roseville, CA</span>
                 </div>
             </div>
             <div class="last-update">
-                Last updated: <span id="lastUpdate">--</span>
-                <button id="refreshBtn" class="refresh-btn" title="Refresh">🔄</button>
+                Updated: <span id="lastUpdate">--</span>
+                <button id="refreshBtn" class="refresh-btn" title="Refresh data">🔄</button>
             </div>
         </header>
 
@@ -34,10 +33,10 @@
             </div>
             <div class="aqi-details">
                 <div class="aqi-category" id="aqiCategory">Loading...</div>
-                <p class="aqi-message" id="aqiMessage">Fetching air quality data...</p>
+                <p class="aqi-message" id="aqiMessage">Fetching the vibe outside...</p>
                 <div class="cigarettes-info">
                     <span class="cigarette-icon">🚬</span>
-                    <span class="cigarette-value"><span id="cigarettes">--</span> cigarettes/day equivalent</span>
+                    <span class="cigarette-value">≈ <span id="cigarettes">--</span> cigs/day</span>
                 </div>
             </div>
         </section>
@@ -48,67 +47,73 @@
                 <div class="reading-icon">💨</div>
                 <div class="reading-value"><span id="pm25">--</span> <small>µg/m³</small></div>
                 <div class="reading-label">PM2.5</div>
+                <div class="reading-desc">Tiny particles that sneak into your lungs</div>
             </div>
             <div class="reading-card">
                 <div class="reading-icon">🌫️</div>
                 <div class="reading-value"><span id="pm10">--</span> <small>µg/m³</small></div>
                 <div class="reading-label">PM10</div>
+                <div class="reading-desc">Bigger dust & pollen bits</div>
             </div>
             <div class="reading-card">
                 <div class="reading-icon">🌡️</div>
                 <div class="reading-value"><span id="temperature">--</span><small>°F</small></div>
-                <div class="reading-label">Temperature</div>
+                <div class="reading-label">Temp</div>
+                <div class="reading-desc">How toasty is it?</div>
             </div>
             <div class="reading-card">
                 <div class="reading-icon">💧</div>
                 <div class="reading-value"><span id="humidity">--</span><small>%</small></div>
                 <div class="reading-label">Humidity</div>
+                <div class="reading-desc">Moisture in the air</div>
             </div>
             <div class="reading-card">
                 <div class="reading-icon">📊</div>
                 <div class="reading-value"><span id="pressure">--</span> <small>hPa</small></div>
                 <div class="reading-label">Pressure</div>
+                <div class="reading-desc">Atmospheric weight</div>
             </div>
             <div class="reading-card">
                 <div class="reading-icon">✅</div>
                 <div class="reading-value"><span id="confidence">--</span><small>%</small></div>
                 <div class="reading-label">Confidence</div>
+                <div class="reading-desc">How reliable is this data</div>
             </div>
         </section>
 
         <!-- AQI Scale Reference -->
         <section class="aqi-scale">
-            <h3>AQI Scale</h3>
+            <h3>What does AQI mean?</h3>
             <div class="scale-bar">
                 <div class="scale-segment good">
                     <div class="scale-range">0-50</div>
-                    <div class="scale-name">Good</div>
-                    <div class="scale-cig">0-0.5 🚬</div>
+                    <div class="scale-name">Good 👍</div>
+                    <div class="scale-cig">~0.5 🚬</div>
                 </div>
                 <div class="scale-segment moderate">
                     <div class="scale-range">51-100</div>
-                    <div class="scale-name">Moderate</div>
-                    <div class="scale-cig">0.5-1.6 🚬</div>
+                    <div class="scale-name">Meh 🤷</div>
+                    <div class="scale-cig">~1.5 🚬</div>
                 </div>
                 <div class="scale-segment usg">
                     <div class="scale-range">101-150</div>
-                    <div class="scale-name">USG</div>
-                    <div class="scale-cig">1.6-2.5 🚬</div>
+                    <div class="scale-name">Iffy 😷</div>
+                    <div class="scale-cig">~2.5 🚬</div>
                 </div>
                 <div class="scale-segment unhealthy">
                     <div class="scale-range">151-200</div>
-                    <div class="scale-name">Unhealthy</div>
-                    <div class="scale-cig">2.5-6.8 🚬</div>
+                    <div class="scale-name">Bad 😬</div>
+                    <div class="scale-cig">~5 🚬</div>
                 </div>
                 <div class="scale-segment very-unhealthy">
                     <div class="scale-range">201-300</div>
-                    <div class="scale-name">Very Unhealthy</div>
-                    <div class="scale-cig">6.8-11.4 🚬</div>
+                    <div class="scale-name">Yikes 🙈</div>
+                    <div class="scale-cig">~10 🚬</div>
                 </div>
                 <div class="scale-segment hazardous">
                     <div class="scale-range">301+</div>
-                    <div class="scale-name">Hazardous</div>
-                    <div class="scale-cig">11.4+ 🚬</div>
+                    <div class="scale-name">Danger ☠️</div>
+                    <div class="scale-cig">15+ 🚬</div>
                 </div>
             </div>
         </section>
@@ -117,13 +122,13 @@
         <section class="charts-section">
             <div class="chart-header">
                 <div class="chart-tabs">
-                    <button class="chart-tab active" data-period="24h">24 Hours</button>
-                    <button class="chart-tab" data-period="7d">7 Days</button>
-                    <button class="chart-tab" data-period="30d">30 Days</button>
+                    <button class="chart-tab active" data-period="24h">Last 24h</button>
+                    <button class="chart-tab" data-period="7d">Past Week</button>
+                    <button class="chart-tab" data-period="30d">Past Month</button>
                 </div>
                 <div class="chart-legend" id="chartLegend">
                     <span class="legend-item"><span class="legend-line"></span> AQI</span>
-                    <span class="legend-item iqr-legend" style="display:none;"><span class="legend-band"></span> IQR Range</span>
+                    <span class="legend-item iqr-legend" style="display:none;"><span class="legend-band"></span> Typical Range</span>
                 </div>
             </div>
             <div class="chart-container">
@@ -131,23 +136,23 @@
             </div>
             <div class="chart-stats" id="chartStats">
                 <div class="stat">
-                    <span class="stat-label">Average AQI</span>
+                    <span class="stat-label">Average</span>
                     <span class="stat-value" id="avgAqi">--</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Max AQI</span>
+                    <span class="stat-label">Worst</span>
                     <span class="stat-value" id="maxAqi">--</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Min AQI</span>
+                    <span class="stat-label">Best</span>
                     <span class="stat-value" id="minAqi">--</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">IQR (Q1-Q3)</span>
+                    <span class="stat-label">Typical</span>
                     <span class="stat-value" id="iqrRange">--</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">🚬 Avg/Day</span>
+                    <span class="stat-label">🚬/day</span>
                     <span class="stat-value" id="avgCigarettes">--</span>
                 </div>
             </div>
@@ -155,21 +160,28 @@
 
         <!-- Nearby Sensors -->
         <section class="nearby-section">
-            <h3>📍 Nearby Sensors</h3>
+            <h3>📍 What about the neighbors?</h3>
             <div class="nearby-grid" id="nearbySensors">
-                <div class="nearby-loading">Loading nearby sensors...</div>
+                <div class="nearby-loading">Finding nearby sensors...</div>
             </div>
+        </section>
+
+        <!-- Dad Jokes Section -->
+        <section class="jokes-section">
+            <div class="joke-header">
+                <span class="joke-emoji">😄</span>
+                <h3>Dad Joke of the Moment</h3>
+            </div>
+            <div class="joke-content">
+                <p id="dadJoke" class="dad-joke">Loading a fresh groaner...</p>
+            </div>
+            <button id="newJokeBtn" class="new-joke-btn">🎲 Another One!</button>
         </section>
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Data from <a href="https://www.purpleair.com" target="_blank">PurpleAir</a> sensor network</p>
-            <p class="sensor-details">
-                Sensor: <span id="sensorModel">--</span> | 
-                Firmware: <span id="firmware">--</span> |
-                ID: <span id="sensorId">--</span>
-            </p>
-            <p class="disclaimer">🚬 Cigarette equivalence based on Berkeley Earth research (22 µg/m³ PM2.5 ≈ 1 cigarette/day)</p>
+            <p>Data from <a href="https://www.purpleair.com" target="_blank">PurpleAir</a> • Sensor: <span id="sensorModel">--</span> • ID: <span id="sensorId">--</span></p>
+            <p class="disclaimer">🚬 Cigarette equivalence via Berkeley Earth (22 µg/m³ ≈ 1 cig/day) • Not medical advice!</p>
         </footer>
     </div>
 

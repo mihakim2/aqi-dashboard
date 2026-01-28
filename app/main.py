@@ -1,7 +1,7 @@
 """AQI Dashboard - FastAPI Backend."""
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -13,6 +13,7 @@ from .aqi import (
     calculate_aqi, apply_epa_correction, aqi_to_cigarettes,
     interpolate_outliers, calculate_iqr_bands, filter_valid_sensor_data
 )
+from .jokes import get_random_joke, get_total_jokes
 
 load_dotenv()
 
@@ -103,14 +104,32 @@ async def get_current_data() -> Dict[str, Any]:
 async def get_history(period: str) -> Dict[str, Any]:
     """Get historical data for specified period (24h, 7d, 30d)."""
     try:
+        # Calculate exact timestamps for the period
+        now = datetime.utcnow()
+        
         if period == "24h":
-            data = await client.get_history_24h(SENSOR_ID)
+            start_time = now - timedelta(hours=24)
+            average = 10  # 10-minute averages
         elif period == "7d":
-            data = await client.get_history_7d(SENSOR_ID)
+            start_time = now - timedelta(days=7)
+            average = 60  # Hourly averages
         elif period == "30d":
-            data = await client.get_history_30d(SENSOR_ID)
+            start_time = now - timedelta(days=30)
+            average = 360  # 6-hour averages
         else:
             raise HTTPException(status_code=400, detail="Invalid period. Use 24h, 7d, or 30d")
+        
+        start_timestamp = int(start_time.timestamp())
+        end_timestamp = int(now.timestamp())
+        
+        # Fetch data with explicit timestamps
+        data = await client.get_sensor_history(
+            SENSOR_ID,
+            ["pm2.5_atm", "pm2.5_cf_1", "humidity", "temperature"],
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
+            average=average
+        )
         
         # Process the data
         fields = data.get("fields", [])
@@ -121,6 +140,11 @@ async def get_history(period: str) -> Dict[str, Any]:
         for row in raw_data:
             entry = dict(zip(fields, row))
             timestamp = entry.get("time_stamp", 0)
+            
+            # Skip data outside our window
+            if timestamp < start_timestamp or timestamp > end_timestamp:
+                continue
+                
             pm25_cf1 = entry.get("pm2.5_cf_1", entry.get("pm2.5_atm", 0))
             humidity = entry.get("humidity", 50)
             
@@ -179,8 +203,10 @@ async def get_history(period: str) -> Dict[str, Any]:
         return {
             "sensor_id": SENSOR_ID,
             "period": period,
-            "average_minutes": data.get("average"),
+            "average_minutes": average,
             "data_points": len(processed),
+            "start_time": start_time.isoformat(),
+            "end_time": now.isoformat(),
             "data": processed,
             "statistics": iqr_stats,
             "iqr_bands": iqr_bands,
@@ -253,6 +279,15 @@ async def get_nearby_sensors() -> Dict[str, Any]:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/joke")
+async def get_joke() -> Dict[str, Any]:
+    """Get a random dad joke."""
+    return {
+        "joke": get_random_joke(),
+        "total_jokes": get_total_jokes()
+    }
 
 
 # Mount static files
