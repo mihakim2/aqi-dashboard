@@ -97,7 +97,9 @@ class AQIDashboard {
         document.getElementById('pm10').textContent = readings.pm10;
         document.getElementById('temperature').textContent = readings.temperature_f;
         document.getElementById('humidity').textContent = readings.humidity;
-        document.getElementById('pressure').textContent = readings.pressure;
+        // Convert pressure from hPa to bar (1 bar = 1000 hPa)
+        const pressureBar = (readings.pressure / 1000).toFixed(3);
+        document.getElementById('pressure').textContent = pressureBar;
         document.getElementById('confidence').textContent = data.confidence;
     }
 
