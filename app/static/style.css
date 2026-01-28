@@ -5,25 +5,34 @@
 }
 
 :root {
-    --bg-primary: #0f1419;
-    --bg-secondary: #1a2332;
-    --bg-card: #232f3e;
-    --text-primary: #ffffff;
-    --text-secondary: #8899a6;
-    --accent: #1da1f2;
-    --good: #00e400;
-    --moderate: #ffff00;
-    --usg: #ff7e00;
-    --unhealthy: #ff0000;
-    --very-unhealthy: #8f3f97;
-    --hazardous: #7e0023;
-    --iqr-band: rgba(29, 161, 242, 0.2);
-    --joke-bg: linear-gradient(135deg, #2a3a4e 0%, #1a2a3e 100%);
+    /* Fresh Sky Theme */
+    --bg-primary: linear-gradient(180deg, #e8f4fc 0%, #f5f9fc 50%, #ffffff 100%);
+    --bg-secondary: rgba(255, 255, 255, 0.85);
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-card-hover: rgba(255, 255, 255, 1);
+    --text-primary: #1a365d;
+    --text-secondary: #4a6fa5;
+    --accent: #3b82f6;
+    --accent-light: rgba(59, 130, 246, 0.1);
+    --border-color: rgba(59, 130, 246, 0.15);
+    --shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+    --shadow-hover: 0 8px 30px rgba(59, 130, 246, 0.12);
+    
+    /* AQI Colors - kept vibrant */
+    --good: #22c55e;
+    --moderate: #eab308;
+    --usg: #f97316;
+    --unhealthy: #ef4444;
+    --very-unhealthy: #a855f7;
+    --hazardous: #dc2626;
+    --iqr-band: rgba(59, 130, 246, 0.15);
+    --joke-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     background: var(--bg-primary);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
@@ -41,7 +50,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 20px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 15px;
@@ -50,6 +59,7 @@ body {
 .header h1 {
     font-size: 1.8rem;
     font-weight: 700;
+    color: var(--text-primary);
 }
 
 .sensor-info {
@@ -73,17 +83,20 @@ body {
 
 .refresh-btn {
     background: var(--bg-card);
-    border: none;
+    border: 1px solid var(--border-color);
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.2s;
+    box-shadow: var(--shadow);
 }
 
 .refresh-btn:hover {
     background: var(--accent);
+    color: white;
     transform: scale(1.05);
+    border-color: var(--accent);
 }
 
 /* AQI Hero Section */
@@ -92,11 +105,14 @@ body {
     align-items: center;
     gap: 40px;
     background: var(--bg-secondary);
-    border-radius: 20px;
+    border-radius: 24px;
     padding: 40px;
     margin-bottom: 30px;
     flex-wrap: wrap;
     justify-content: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
 }
 
 .aqi-gauge {
@@ -123,8 +139,9 @@ body {
     position: absolute;
     width: 160px;
     height: 160px;
-    background: var(--bg-secondary);
+    background: white;
     border-radius: 50%;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .aqi-value {
@@ -166,10 +183,11 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: var(--bg-card);
+    background: var(--accent-light);
     padding: 12px 18px;
-    border-radius: 10px;
+    border-radius: 12px;
     margin-top: 15px;
+    border: 1px solid var(--border-color);
 }
 
 .cigarette-icon {
@@ -197,14 +215,17 @@ body {
 
 .reading-card {
     background: var(--bg-card);
-    border-radius: 15px;
+    border-radius: 16px;
     padding: 20px;
     text-align: center;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 .reading-card:hover {
     transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
 }
 
 .reading-icon {
@@ -241,9 +262,12 @@ body {
 /* AQI Scale */
 .aqi-scale {
     background: var(--bg-secondary);
-    border-radius: 15px;
+    border-radius: 16px;
     padding: 20px;
     margin-bottom: 30px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
 }
 
 .aqi-scale h3 {
@@ -294,6 +318,9 @@ body {
     border-radius: 20px;
     padding: 25px;
     margin-bottom: 30px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
 }
 
 .chart-header {
@@ -315,34 +342,44 @@ body {
 /* Metric Toggle (AQI/Temp/Humidity) */
 .metric-toggle {
     display: flex;
-    background: var(--bg-card);
+    background: var(--accent-light);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
+    border: 1px solid var(--border-color);
 }
 
 .metric-btn {
     background: transparent;
     border: none;
-    padding: 8px 14px;
+    padding: 10px 16px;
     border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.2s;
     white-space: nowrap;
+    /* Fix for iPhone touch */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .metric-btn:hover {
     color: var(--text-primary);
-    background: rgba(255,255,255,0.05);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.metric-btn:active {
+    transform: scale(0.97);
 }
 
 .metric-btn.active {
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(29, 161, 242, 0.3);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 /* Time Period Tabs */
@@ -352,24 +389,34 @@ body {
 }
 
 .chart-tab {
-    background: var(--bg-card);
-    border: none;
-    padding: 8px 14px;
+    background: var(--accent-light);
+    border: 1px solid var(--border-color);
+    padding: 10px 16px;
     border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
     transition: all 0.2s;
+    /* Fix for iPhone touch */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .chart-tab:hover {
-    background: rgba(29, 161, 242, 0.2);
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.chart-tab:active {
+    transform: scale(0.97);
 }
 
 .chart-tab.active {
     background: var(--accent);
     color: #fff;
+    border-color: var(--accent);
 }
 
 .chart-legend {
@@ -441,11 +488,15 @@ body {
     border-radius: 20px;
     padding: 25px;
     margin-bottom: 30px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
 }
 
 .nearby-section h3 {
     margin-bottom: 20px;
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .nearby-grid {
@@ -461,6 +512,14 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.2s;
+}
+
+.nearby-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
 .nearby-aqi {
@@ -497,7 +556,8 @@ body {
     padding: 30px;
     margin-bottom: 30px;
     text-align: center;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 .joke-header {
@@ -518,10 +578,11 @@ body {
 }
 
 .joke-content {
-    background: rgba(0,0,0,0.2);
+    background: rgba(255, 255, 255, 0.6);
     border-radius: 15px;
     padding: 25px 30px;
     margin-bottom: 20px;
+    border: 1px solid var(--border-color);
 }
 
 .dad-joke {
@@ -541,11 +602,16 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    /* Fix for iPhone touch */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .new-joke-btn:hover {
-    background: #0d8ae0;
+    background: #2563eb;
     transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .new-joke-btn:active {

@@ -175,13 +175,13 @@ async def get_history(period: str) -> Dict[str, Any]:
         iqr_stats = calculate_iqr_bands(aqi_values)
         
         # Calculate rolling IQR for chart bands (group by time windows)
-        iqr_bands = []
-        if period in ['7d', '30d'] and len(processed) > 10:
-            window_size = 6 if period == '7d' else 12  # 6 hours for 7d, 12 hours for 30d
-            for i in range(0, len(processed), window_size):
-                window = processed[i:i + window_size]
+        # Helper function to calculate IQR bands for any metric
+        def calc_iqr_bands(data, metric_key, window_size):
+            bands = []
+            for i in range(0, len(data), window_size):
+                window = data[i:i + window_size]
                 if window:
-                    window_values = [d['aqi'] for d in window if d['aqi'] > 0]
+                    window_values = [d[metric_key] for d in window if d.get(metric_key) is not None and d[metric_key] > 0]
                     if len(window_values) >= 3:
                         sorted_vals = sorted(window_values)
                         n = len(sorted_vals)
@@ -189,12 +189,23 @@ async def get_history(period: str) -> Dict[str, Any]:
                         q3 = sorted_vals[(3 * n) // 4] if n >= 4 else sorted_vals[-1]
                         median = sorted_vals[n // 2]
                         
-                        iqr_bands.append({
+                        bands.append({
                             "timestamp": window[len(window)//2]['timestamp'],
-                            "q1": q1,
-                            "median": median,
-                            "q3": q3
+                            "q1": round(q1, 1),
+                            "median": round(median, 1),
+                            "q3": round(q3, 1)
                         })
+            return bands
+        
+        iqr_bands = []
+        temp_iqr_bands = []
+        humidity_iqr_bands = []
+        
+        if period in ['7d', '30d'] and len(processed) > 10:
+            window_size = 6 if period == '7d' else 12  # 6 hours for 7d, 12 hours for 30d
+            iqr_bands = calc_iqr_bands(processed, 'aqi', window_size)
+            temp_iqr_bands = calc_iqr_bands(processed, 'temperature', window_size)
+            humidity_iqr_bands = calc_iqr_bands(processed, 'humidity', window_size)
         
         # Calculate cigarettes stats
         avg_aqi = sum(aqi_values) / len(aqi_values) if aqi_values else 0
@@ -210,6 +221,8 @@ async def get_history(period: str) -> Dict[str, Any]:
             "data": processed,
             "statistics": iqr_stats,
             "iqr_bands": iqr_bands,
+            "temp_iqr_bands": temp_iqr_bands,
+            "humidity_iqr_bands": humidity_iqr_bands,
             "cigarettes_per_day_avg": round(cigarettes_avg, 2)
         }
     except HTTPException:

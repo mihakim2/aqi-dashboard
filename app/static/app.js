@@ -193,18 +193,29 @@ class AQIDashboard {
             interpolated: d.interpolated
         })).filter(d => d.y !== null && d.y !== undefined);
 
-        // Prepare IQR band data for 7d and 30d (only for AQI)
-        const showIQR = metric === 'aqi' && (period === '7d' || period === '30d') && data.iqr_bands && data.iqr_bands.length > 0;
+        // Prepare IQR band data for 7d and 30d (for all metrics)
+        let iqrBandsData = null;
+        if (period === '7d' || period === '30d') {
+            if (metric === 'aqi' && data.iqr_bands && data.iqr_bands.length > 0) {
+                iqrBandsData = data.iqr_bands;
+            } else if (metric === 'temperature' && data.temp_iqr_bands && data.temp_iqr_bands.length > 0) {
+                iqrBandsData = data.temp_iqr_bands;
+            } else if (metric === 'humidity' && data.humidity_iqr_bands && data.humidity_iqr_bands.length > 0) {
+                iqrBandsData = data.humidity_iqr_bands;
+            }
+        }
+        
+        const showIQR = iqrBandsData !== null;
         
         let iqrUpperData = [];
         let iqrLowerData = [];
         
         if (showIQR) {
-            iqrUpperData = data.iqr_bands.map(d => ({
+            iqrUpperData = iqrBandsData.map(d => ({
                 x: new Date(d.timestamp * 1000),
                 y: d.q3
             }));
-            iqrLowerData = data.iqr_bands.map(d => ({
+            iqrLowerData = iqrBandsData.map(d => ({
                 x: new Date(d.timestamp * 1000),
                 y: d.q1
             }));
@@ -298,13 +309,14 @@ class AQIDashboard {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: '#232f3e',
-                        titleColor: '#fff',
-                        bodyColor: '#8899a6',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1a365d',
+                        bodyColor: '#4a6fa5',
                         borderColor: config.color,
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                         filter: function(tooltipItem) {
                             return tooltipItem.dataset.label === config.label;
                         },
@@ -342,10 +354,10 @@ class AQIDashboard {
                             }
                         },
                         grid: {
-                            color: 'rgba(255,255,255,0.05)'
+                            color: 'rgba(59, 130, 246, 0.08)'
                         },
                         ticks: {
-                            color: '#8899a6',
+                            color: '#4a6fa5',
                             maxTicksLimit: period === '24h' ? 12 : 7
                         }
                     },
@@ -353,10 +365,10 @@ class AQIDashboard {
                         beginAtZero: config.beginAtZero,
                         suggestedMax: config.suggestedMax,
                         grid: {
-                            color: 'rgba(255,255,255,0.05)'
+                            color: 'rgba(59, 130, 246, 0.08)'
                         },
                         ticks: {
-                            color: '#8899a6',
+                            color: '#4a6fa5',
                             callback: function(value) {
                                 return value + config.unit;
                             }
@@ -430,22 +442,43 @@ class AQIDashboard {
             document.getElementById('statHighUnit').textContent = config.unit;
             document.getElementById('statLowUnit').textContent = config.unit;
             
-            // IQR range (only for AQI)
+            // IQR range - use backend data when available
+            let iqrData = null;
             if (metric === 'aqi' && data.statistics) {
-                const stats = data.statistics;
-                document.getElementById('iqrRange').textContent = `${stats.q1}-${stats.q3}`;
-                document.getElementById('iqrUnit').textContent = '';
-            } else if (metric !== 'aqi') {
-                // Calculate IQR for other metrics
-                const sorted = [...values].sort((a, b) => a - b);
-                const n = sorted.length;
-                const q1 = sorted[Math.floor(n * 0.25)];
-                const q3 = sorted[Math.floor(n * 0.75)];
-                document.getElementById('iqrRange').textContent = `${q1.toFixed(config.decimals)}-${q3.toFixed(config.decimals)}`;
+                iqrData = data.statistics;
+            } else if (metric === 'temperature' && data.temp_iqr_bands && data.temp_iqr_bands.length > 0) {
+                // Calculate overall IQR from temp bands
+                const allQ1 = data.temp_iqr_bands.map(b => b.q1);
+                const allQ3 = data.temp_iqr_bands.map(b => b.q3);
+                iqrData = {
+                    q1: Math.round(allQ1.reduce((a,b) => a+b, 0) / allQ1.length),
+                    q3: Math.round(allQ3.reduce((a,b) => a+b, 0) / allQ3.length)
+                };
+            } else if (metric === 'humidity' && data.humidity_iqr_bands && data.humidity_iqr_bands.length > 0) {
+                const allQ1 = data.humidity_iqr_bands.map(b => b.q1);
+                const allQ3 = data.humidity_iqr_bands.map(b => b.q3);
+                iqrData = {
+                    q1: Math.round(allQ1.reduce((a,b) => a+b, 0) / allQ1.length),
+                    q3: Math.round(allQ3.reduce((a,b) => a+b, 0) / allQ3.length)
+                };
+            }
+            
+            if (iqrData) {
+                document.getElementById('iqrRange').textContent = `${iqrData.q1}-${iqrData.q3}`;
                 document.getElementById('iqrUnit').textContent = config.unit;
             } else {
-                document.getElementById('iqrRange').textContent = '--';
-                document.getElementById('iqrUnit').textContent = '';
+                // Fallback: calculate from current values
+                const sorted = [...values].sort((a, b) => a - b);
+                const n = sorted.length;
+                if (n >= 4) {
+                    const q1 = sorted[Math.floor(n * 0.25)];
+                    const q3 = sorted[Math.floor(n * 0.75)];
+                    document.getElementById('iqrRange').textContent = `${q1.toFixed(config.decimals)}-${q3.toFixed(config.decimals)}`;
+                    document.getElementById('iqrUnit').textContent = config.unit;
+                } else {
+                    document.getElementById('iqrRange').textContent = '--';
+                    document.getElementById('iqrUnit').textContent = '';
+                }
             }
             
             // Show/hide cigarettes stat
