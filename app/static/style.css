@@ -305,19 +305,60 @@ body {
     gap: 15px;
 }
 
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Metric Toggle (AQI/Temp/Humidity) */
+.metric-toggle {
+    display: flex;
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.metric-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.metric-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.05);
+}
+
+.metric-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(29, 161, 242, 0.3);
+}
+
+/* Time Period Tabs */
 .chart-tabs {
     display: flex;
-    gap: 10px;
+    gap: 6px;
 }
 
 .chart-tab {
     background: var(--bg-card);
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 8px 14px;
+    border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: all 0.2s;
 }
@@ -373,6 +414,13 @@ body {
 .stat {
     text-align: center;
     min-width: 70px;
+}
+
+.stat-unit {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 2px;
 }
 
 .stat-label {
@@ -738,6 +786,30 @@ body {
         padding: 15px;
         margin-bottom: 20px;
         border-radius: 15px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .chart-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .metric-toggle {
+        width: 100%;
+        justify-content: space-between;
+        padding: 3px;
+    }
+    
+    .metric-btn {
+        flex: 1;
+        padding: 8px 8px;
+        font-size: 0.7rem;
+        text-align: center;
     }
     
     .chart-tabs {

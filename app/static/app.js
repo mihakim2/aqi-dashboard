@@ -4,6 +4,8 @@ class AQIDashboard {
     constructor() {
         this.chart = null;
         this.currentPeriod = '24h';
+        this.currentMetric = 'aqi';
+        this.historyData = null; // Cache history data
         this.init();
     }
 
@@ -21,6 +23,20 @@ class AQIDashboard {
         // Refresh button
         document.getElementById('refreshBtn').addEventListener('click', () => {
             this.refresh();
+        });
+
+        // Metric toggle buttons (AQI/Temp/Humidity)
+        document.querySelectorAll('.metric-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentMetric = e.target.dataset.metric;
+                // Re-render chart with cached data (no refetch needed)
+                if (this.historyData) {
+                    this.updateChart(this.historyData, this.currentPeriod);
+                    this.updateStats(this.historyData);
+                }
+            });
         });
 
         // Chart period tabs
@@ -120,6 +136,7 @@ class AQIDashboard {
         try {
             const response = await fetch(`/api/history/${period}`);
             const data = await response.json();
+            this.historyData = data; // Cache the data
             this.updateChart(data, period);
             this.updateStats(data);
         } catch (error) {
@@ -129,18 +146,55 @@ class AQIDashboard {
 
     updateChart(data, period) {
         const ctx = document.getElementById('trendChart').getContext('2d');
+        const metric = this.currentMetric;
+        
+        // Metric configuration
+        const metricConfig = {
+            aqi: {
+                label: 'AQI',
+                color: '#1da1f2',
+                unit: '',
+                getValue: d => d.aqi,
+                suggestedMax: 150,
+                beginAtZero: true
+            },
+            temperature: {
+                label: 'Temperature',
+                color: '#ff6b6b',
+                unit: '°F',
+                getValue: d => d.temperature,
+                suggestedMax: null,
+                beginAtZero: false
+            },
+            humidity: {
+                label: 'Humidity',
+                color: '#4ecdc4',
+                unit: '%',
+                getValue: d => d.humidity,
+                suggestedMax: 100,
+                beginAtZero: true
+            }
+        };
+        
+        const config = metricConfig[metric];
+        
+        // Update legend label
+        document.getElementById('legendLabel').textContent = config.label;
         
         // Prepare main data for chart
         const chartData = data.data.map(d => ({
             x: new Date(d.timestamp * 1000),
-            y: d.aqi,
+            y: config.getValue(d),
             pm25: d.pm25,
+            aqi: d.aqi,
+            temperature: d.temperature,
+            humidity: d.humidity,
             color: d.color,
             interpolated: d.interpolated
-        }));
+        })).filter(d => d.y !== null && d.y !== undefined);
 
-        // Prepare IQR band data for 7d and 30d
-        const showIQR = (period === '7d' || period === '30d') && data.iqr_bands && data.iqr_bands.length > 0;
+        // Prepare IQR band data for 7d and 30d (only for AQI)
+        const showIQR = metric === 'aqi' && (period === '7d' || period === '30d') && data.iqr_bands && data.iqr_bands.length > 0;
         
         let iqrUpperData = [];
         let iqrLowerData = [];
@@ -156,7 +210,7 @@ class AQIDashboard {
             }));
         }
 
-        // Show/hide IQR legend
+        // Show/hide IQR legend (only for AQI)
         const iqrLegend = document.querySelector('.iqr-legend');
         if (iqrLegend) {
             iqrLegend.style.display = showIQR ? 'flex' : 'none';
@@ -169,19 +223,19 @@ class AQIDashboard {
 
         // Create gradient for main line
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(29, 161, 242, 0.4)');
-        gradient.addColorStop(1, 'rgba(29, 161, 242, 0.0)');
+        gradient.addColorStop(0, this.hexToRgba(config.color, 0.4));
+        gradient.addColorStop(1, this.hexToRgba(config.color, 0.0));
 
         // Build datasets
         const datasets = [];
         
-        // IQR bands (if applicable)
+        // IQR bands (if applicable, only for AQI)
         if (showIQR && iqrUpperData.length > 0) {
             datasets.push({
                 label: 'Q3',
                 data: iqrUpperData,
-                borderColor: 'rgba(29, 161, 242, 0.3)',
-                backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                borderColor: this.hexToRgba(config.color, 0.3),
+                backgroundColor: this.hexToRgba(config.color, 0.1),
                 fill: '+1',
                 tension: 0.4,
                 pointRadius: 0,
@@ -192,7 +246,7 @@ class AQIDashboard {
             datasets.push({
                 label: 'Q1',
                 data: iqrLowerData,
-                borderColor: 'rgba(29, 161, 242, 0.3)',
+                borderColor: this.hexToRgba(config.color, 0.3),
                 backgroundColor: 'transparent',
                 fill: false,
                 tension: 0.4,
@@ -202,11 +256,11 @@ class AQIDashboard {
             });
         }
         
-        // Main AQI line
+        // Main data line
         datasets.push({
-            label: 'AQI',
+            label: config.label,
             data: chartData,
-            borderColor: '#1da1f2',
+            borderColor: config.color,
             backgroundColor: gradient,
             fill: true,
             tension: 0.4,
@@ -216,18 +270,19 @@ class AQIDashboard {
             },
             pointBackgroundColor: (ctx) => {
                 const point = chartData[ctx.dataIndex];
-                return point && point.interpolated ? '#ffa726' : '#1da1f2';
+                return point && point.interpolated ? '#ffa726' : config.color;
             },
             pointBorderColor: (ctx) => {
                 const point = chartData[ctx.dataIndex];
-                return point && point.interpolated ? '#ff9800' : '#1da1f2';
+                return point && point.interpolated ? '#ff9800' : config.color;
             },
             pointHoverRadius: 6,
-            pointHoverBackgroundColor: '#1da1f2',
+            pointHoverBackgroundColor: config.color,
             borderWidth: 2,
             order: 0
         });
 
+        const self = this;
         this.chart = new Chart(ctx, {
             type: 'line',
             data: { datasets },
@@ -246,12 +301,12 @@ class AQIDashboard {
                         backgroundColor: '#232f3e',
                         titleColor: '#fff',
                         bodyColor: '#8899a6',
-                        borderColor: '#1da1f2',
+                        borderColor: config.color,
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
                         filter: function(tooltipItem) {
-                            return tooltipItem.dataset.label === 'AQI';
+                            return tooltipItem.dataset.label === config.label;
                         },
                         callbacks: {
                             title: function(context) {
@@ -259,10 +314,18 @@ class AQIDashboard {
                             },
                             label: function(context) {
                                 const point = context.raw;
-                                const labels = [
-                                    `AQI: ${point.y}${point.interpolated ? ' (estimated)' : ''}`,
-                                    `PM2.5: ${point.pm25} µg/m³`
-                                ];
+                                const labels = [];
+                                
+                                if (metric === 'aqi') {
+                                    labels.push(`AQI: ${point.y}${point.interpolated ? ' (estimated)' : ''}`);
+                                    labels.push(`PM2.5: ${point.pm25} µg/m³`);
+                                } else if (metric === 'temperature') {
+                                    labels.push(`Temp: ${point.y}°F`);
+                                    labels.push(`AQI: ${point.aqi}`);
+                                } else if (metric === 'humidity') {
+                                    labels.push(`Humidity: ${point.y}%`);
+                                    labels.push(`AQI: ${point.aqi}`);
+                                }
                                 return labels;
                             }
                         }
@@ -287,42 +350,112 @@ class AQIDashboard {
                         }
                     },
                     y: {
-                        beginAtZero: true,
-                        suggestedMax: 150,
+                        beginAtZero: config.beginAtZero,
+                        suggestedMax: config.suggestedMax,
                         grid: {
                             color: 'rgba(255,255,255,0.05)'
                         },
                         ticks: {
-                            color: '#8899a6'
+                            color: '#8899a6',
+                            callback: function(value) {
+                                return value + config.unit;
+                            }
                         }
                     }
                 }
             }
         });
     }
+    
+    // Helper to convert hex to rgba
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
     updateStats(data) {
-        const aqiValues = data.data.map(d => d.aqi).filter(v => v > 0);
+        const metric = this.currentMetric;
         
-        if (aqiValues.length > 0) {
-            const avg = Math.round(aqiValues.reduce((a, b) => a + b, 0) / aqiValues.length);
-            const max = Math.max(...aqiValues);
-            const min = Math.min(...aqiValues);
+        // Metric configuration
+        const metricConfig = {
+            aqi: {
+                getValue: d => d.aqi,
+                unit: '',
+                highLabel: 'Worst',
+                lowLabel: 'Best',
+                decimals: 0,
+                showCigs: true
+            },
+            temperature: {
+                getValue: d => d.temperature,
+                unit: '°F',
+                highLabel: 'High',
+                lowLabel: 'Low',
+                decimals: 0,
+                showCigs: false
+            },
+            humidity: {
+                getValue: d => d.humidity,
+                unit: '%',
+                highLabel: 'High',
+                lowLabel: 'Low',
+                decimals: 0,
+                showCigs: false
+            }
+        };
+        
+        const config = metricConfig[metric];
+        
+        // Get values for the selected metric
+        const values = data.data.map(d => config.getValue(d)).filter(v => v !== null && v !== undefined && v > 0);
+        
+        if (values.length > 0) {
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            const max = Math.max(...values);
+            const min = Math.min(...values);
             
-            document.getElementById('avgAqi').textContent = avg;
-            document.getElementById('maxAqi').textContent = max;
-            document.getElementById('minAqi').textContent = min;
+            // Update stat labels
+            document.getElementById('statHighLabel').textContent = config.highLabel;
+            document.getElementById('statLowLabel').textContent = config.lowLabel;
             
-            // IQR range
-            if (data.statistics) {
+            // Update values
+            document.getElementById('statAvg').textContent = avg.toFixed(config.decimals);
+            document.getElementById('statHigh').textContent = max.toFixed(config.decimals);
+            document.getElementById('statLow').textContent = min.toFixed(config.decimals);
+            
+            // Update units
+            document.getElementById('statAvgUnit').textContent = config.unit;
+            document.getElementById('statHighUnit').textContent = config.unit;
+            document.getElementById('statLowUnit').textContent = config.unit;
+            
+            // IQR range (only for AQI)
+            if (metric === 'aqi' && data.statistics) {
                 const stats = data.statistics;
                 document.getElementById('iqrRange').textContent = `${stats.q1}-${stats.q3}`;
+                document.getElementById('iqrUnit').textContent = '';
+            } else if (metric !== 'aqi') {
+                // Calculate IQR for other metrics
+                const sorted = [...values].sort((a, b) => a - b);
+                const n = sorted.length;
+                const q1 = sorted[Math.floor(n * 0.25)];
+                const q3 = sorted[Math.floor(n * 0.75)];
+                document.getElementById('iqrRange').textContent = `${q1.toFixed(config.decimals)}-${q3.toFixed(config.decimals)}`;
+                document.getElementById('iqrUnit').textContent = config.unit;
             } else {
                 document.getElementById('iqrRange').textContent = '--';
+                document.getElementById('iqrUnit').textContent = '';
             }
             
-            // Cigarettes average
-            if (data.cigarettes_per_day_avg !== undefined) {
+            // Show/hide cigarettes stat
+            const cigsStat = document.getElementById('cigsStat');
+            if (cigsStat) {
+                cigsStat.style.display = config.showCigs ? 'block' : 'none';
+            }
+            
+            // Cigarettes average (only for AQI)
+            if (config.showCigs && data.cigarettes_per_day_avg !== undefined) {
                 document.getElementById('avgCigarettes').textContent = data.cigarettes_per_day_avg.toFixed(1);
             }
         }

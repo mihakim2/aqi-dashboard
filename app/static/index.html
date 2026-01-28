@@ -121,13 +121,20 @@
         <!-- Trend Charts -->
         <section class="charts-section">
             <div class="chart-header">
-                <div class="chart-tabs">
-                    <button class="chart-tab active" data-period="24h">Last 24h</button>
-                    <button class="chart-tab" data-period="7d">Past Week</button>
-                    <button class="chart-tab" data-period="30d">Past Month</button>
+                <div class="chart-controls">
+                    <div class="metric-toggle">
+                        <button class="metric-btn active" data-metric="aqi">📊 AQI</button>
+                        <button class="metric-btn" data-metric="temperature">🌡️ Temp</button>
+                        <button class="metric-btn" data-metric="humidity">💧 Humidity</button>
+                    </div>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" data-period="24h">24h</button>
+                        <button class="chart-tab" data-period="7d">7d</button>
+                        <button class="chart-tab" data-period="30d">30d</button>
+                    </div>
                 </div>
                 <div class="chart-legend" id="chartLegend">
-                    <span class="legend-item"><span class="legend-line"></span> AQI</span>
+                    <span class="legend-item"><span class="legend-line"></span> <span id="legendLabel">AQI</span></span>
                     <span class="legend-item iqr-legend" style="display:none;"><span class="legend-band"></span> Typical Range</span>
                 </div>
             </div>
@@ -137,21 +144,21 @@
             <div class="chart-stats" id="chartStats">
                 <div class="stat">
                     <span class="stat-label">Average</span>
-                    <span class="stat-value" id="avgAqi">--</span>
+                    <span class="stat-value" id="statAvg">--</span><span class="stat-unit" id="statAvgUnit"></span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Worst</span>
-                    <span class="stat-value" id="maxAqi">--</span>
+                    <span class="stat-label" id="statHighLabel">Worst</span>
+                    <span class="stat-value" id="statHigh">--</span><span class="stat-unit" id="statHighUnit"></span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">Best</span>
-                    <span class="stat-value" id="minAqi">--</span>
+                    <span class="stat-label" id="statLowLabel">Best</span>
+                    <span class="stat-value" id="statLow">--</span><span class="stat-unit" id="statLowUnit"></span>
                 </div>
                 <div class="stat">
                     <span class="stat-label">Typical</span>
-                    <span class="stat-value" id="iqrRange">--</span>
+                    <span class="stat-value" id="iqrRange">--</span><span class="stat-unit" id="iqrUnit"></span>
                 </div>
-                <div class="stat">
+                <div class="stat stat-cigs" id="cigsStat">
                     <span class="stat-label">🚬/day</span>
                     <span class="stat-value" id="avgCigarettes">--</span>
                 </div>
